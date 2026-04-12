@@ -1,0 +1,29 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Shield shape - brand mark -->
+    <path
+        android:fillColor="#0D47A1"
+        android:pathData="M60,10 L100,28 L100,61 C100,85 83.5,103 60,112 C36.5,103 20,85 20,61 L20,28 Z" />
+
+    <!-- Shield inner - light blue -->
+    <path
+        android:fillColor="#42A5F5"
+        android:pathData="M60,19 L91,34 L91,61 C91,80.5 77.5,95.5 60,103 C42.5,95.5 29,80.5 29,61 L29,34 Z" />
+
+    <!-- GPS pin icon inside shield -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,40 C51.75,40 45,46.75 45,55 C45,66.25 60,85 60,85 C60,85 75,66.25 75,55 C75,46.75 68.25,40 60,40 Z M60,61 C56.7,61 54,58.3 54,55 C54,51.7 56.7,49 60,49 C63.3,49 66,51.7 66,55 C66,58.3 63.3,61 60,61 Z" />
+
+    <!-- Crosshairs around the pin -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.25"
+        android:pathData="M60,34 L60,38.5 M60,86.5 L60,91 M36,61 L40.5,61 M79.5,61 L84,61" />
+
+</vector>

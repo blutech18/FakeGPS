@@ -1,0 +1,31 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Manuscript (private)
+/manuscript/
+
+# Node
+/node_modules/
+/firebase/functions/node_modules/
+
+# Secrets
+serviceAccountKey.json
+app/google-services.json
+.env
+
+# Build outputs
+/app/build/
+/firebase/firebase-debug.log

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/dashboardFragment">
+
+    <fragment
+        android:id="@+id/dashboardFragment"
+        android:name="com.nodare.geosec.presentation.dashboard.DashboardFragment"
+        android:label="Dashboard"
+        tools:layout="@layout/fragment_dashboard" />
+
+    <fragment
+        android:id="@+id/checkInFragment"
+        android:name="com.nodare.geosec.presentation.checkin.CheckInFragment"
+        android:label="Check In/Out"
+        tools:layout="@layout/fragment_checkin" />
+
+    <fragment
+        android:id="@+id/equipmentFragment"
+        android:name="com.nodare.geosec.presentation.equipment.EquipmentFragment"
+        android:label="Storage"
+        tools:layout="@layout/fragment_equipment" />
+
+    <fragment
+        android:id="@+id/dispatchFragment"
+        android:name="com.nodare.geosec.presentation.dispatch.DispatchFragment"
+        android:label="Dispatch"
+        tools:layout="@layout/fragment_dispatch" />
+
+    <fragment
+        android:id="@+id/trackingFragment"
+        android:name="com.nodare.geosec.presentation.tracking.TrackingFragment"
+        android:label="Tracking"
+        tools:layout="@layout/fragment_tracking" />
+
+    <fragment
+        android:id="@+id/alertsFragment"
+        android:name="com.nodare.geosec.presentation.alerts.AlertsFragment"
+        android:label="Alerts"
+        tools:layout="@layout/fragment_alerts" />
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.nodare.geosec.presentation.profile.ProfileFragment"
+        android:label="Profile"
+        tools:layout="@layout/fragment_profile" />
+
+</navigation>

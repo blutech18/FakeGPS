@@ -1,0 +1,167 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================================
+    // HELPER FUNCTIONS
+    // ============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (getUserRole() == 'CEO' || getUserRole() == 'Admin');
+    }
+
+    function isCEO() {
+      return isAuthenticated() && getUserRole() == 'CEO';
+    }
+
+    function hasTimestampFields() {
+      return request.resource.data.keys().hasAll(['createdAt', 'updatedAt']);
+    }
+
+    // ============================================================
+    // COLLECTION: users
+    // ============================================================
+    match /users/{userId} {
+      // Users can read their own profile, Admins/CEO can read all
+      allow read: if isOwner(userId) || isAdmin();
+
+      // Only Admins/CEO can create or update user profiles
+      allow create: if isAdmin();
+      allow update: if isOwner(userId) || isAdmin();
+
+      // Only CEO can delete users
+      allow delete: if isCEO();
+    }
+
+    // ============================================================
+    // COLLECTION: roles
+    // ============================================================
+    match /roles/{roleId} {
+      // Only Admin/CEO can read role definitions
+      allow read: if isAdmin();
+
+      // Only CEO can modify roles
+      allow write: if isCEO();
+    }
+
+    // ============================================================
+    // COLLECTION: check_in_logs
+    // ============================================================
+    match /check_in_logs/{logId} {
+      // Users can read their own logs, Admins/CEO can read all
+      allow read: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
+
+      // Authenticated users can create their own check-in logs
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid;
+
+      // Users can update their own logs (for check-out), Admins can update any
+      allow update: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
+
+      // Only Admins can delete check-in logs
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    // COLLECTION: equipment_inventory
+    // ============================================================
+    match /equipment_inventory/{equipmentId} {
+      // All authenticated users can read equipment
+      allow read: if isAuthenticated();
+
+      // Only Admins/CEO can create, update, or delete equipment
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    // COLLECTION: dispatch_sessions
+    // ============================================================
+    match /dispatch_sessions/{sessionId} {
+      // Users can read their own sessions, Admins/CEO can read all
+      allow read: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
+
+      // Authenticated users can create their own dispatch sessions
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid;
+
+      // Users can update their own sessions (to end them), system can mark suspicious
+      allow update: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
+
+      // Only Admins can delete dispatch sessions
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    // COLLECTION: gps_logs
+    // ============================================================
+    match /gps_logs/{logId} {
+      // Users can read their own GPS logs, Admins/CEO can read all
+      allow read: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
+
+      // Authenticated users can create GPS logs for themselves
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid;
+
+      // GPS logs should not be editable after creation
+      allow update: if false;
+
+      // Only CEO can delete GPS logs
+      allow delete: if isCEO();
+    }
+
+    // ============================================================
+    // COLLECTION: security_alerts
+    // ============================================================
+    match /security_alerts/{alertId} {
+      // Only Admins/CEO can read security alerts
+      allow read: if isAdmin();
+
+      // System (authenticated users/services) can create alerts
+      allow create: if isAuthenticated();
+
+      // Only Admins/CEO can resolve/update alerts
+      allow update: if isAdmin();
+
+      // Only CEO can delete alerts
+      allow delete: if isCEO();
+    }
+
+    // ============================================================
+    // COLLECTION: routes
+    // ============================================================
+    match /routes/{routeId} {
+      // Users can read their own routes, Admins/CEO can read all
+      allow read: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
+
+      // Authenticated users can create routes for themselves
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid;
+
+      // Routes are immutable once created
+      allow update: if false;
+
+      // Only CEO can delete routes
+      allow delete: if isCEO();
+    }
+  }
+}

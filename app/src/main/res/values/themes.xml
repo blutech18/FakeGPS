@@ -1,0 +1,195 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Theme.NodareGeoSec" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/primary_dark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/accent</item>
+        <item name="colorSecondaryVariant">@color/accent_light</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+        <item name="colorPrimaryContainer">@color/primary_lightest</item>
+        <item name="colorOnPrimaryContainer">@color/primary_dark</item>
+        <item name="colorSecondaryContainer">@color/accent_light</item>
+        <item name="colorOnSecondaryContainer">@color/primary_dark</item>
+        <item name="android:statusBarColor">@color/primary_dark</item>
+        <item name="android:navigationBarColor">@color/white</item>
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
+
+        <!-- Premium Font Style -->
+        <item name="android:fontFamily">@font/san_francisco</item>
+        <item name="fontFamily">@font/san_francisco</item>
+        <item name="textAppearanceBody1">@style/TextAppearance.App.Body1</item>
+        <item name="textAppearanceBody2">@style/TextAppearance.App.Body2</item>
+        <item name="textAppearanceHeadline1">@style/TextAppearance.App.Headline1</item>
+        <item name="textAppearanceHeadline2">@style/TextAppearance.App.Headline2</item>
+        <item name="textAppearanceHeadline3">@style/TextAppearance.App.Headline3</item>
+        <item name="textAppearanceHeadline4">@style/TextAppearance.App.Headline4</item>
+        <item name="textAppearanceHeadline5">@style/TextAppearance.App.Headline5</item>
+        <item name="textAppearanceHeadline6">@style/TextAppearance.App.Headline6</item>
+        <item name="textAppearanceSubtitle1">@style/TextAppearance.App.Subtitle1</item>
+        <item name="textAppearanceSubtitle2">@style/TextAppearance.App.Subtitle2</item>
+        <item name="textAppearanceButton">@style/TextAppearance.App.Button</item>
+        <item name="textAppearanceCaption">@style/TextAppearance.App.Caption</item>
+        <item name="textAppearanceOverline">@style/TextAppearance.App.Overline</item>
+
+        <!-- Material Component Styles -->
+        <item name="materialCardViewStyle">@style/NodareCardStyle</item>
+        <item name="floatingActionButtonStyle">@style/NodareFabStyle</item>
+        <item name="materialButtonStyle">@style/NodareButtonStyle</item>
+        <item name="bottomNavigationStyle">@style/NodareBottomNavStyle</item>
+    </style>
+
+    <style name="Theme.NodareGeoSec.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <!-- Card Style -->
+    <style name="NodareCardStyle" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardElevation">2dp</item>
+        <item name="strokeColor">@color/card_stroke</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cardBackgroundColor">@color/white</item>
+    </style>
+
+    <!-- FAB Style -->
+    <style name="NodareFabStyle" parent="Widget.MaterialComponents.FloatingActionButton">
+        <item name="backgroundTint">@color/primary</item>
+        <item name="tint">@color/white</item>
+    </style>
+
+    <!-- Primary Button Style -->
+    <style name="NodareButtonStyle" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/primary</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <!-- Bottom Nav Style -->
+    <style name="NodareBottomNavStyle" parent="Widget.MaterialComponents.BottomNavigationView.Colored">
+        <item name="backgroundTint">@color/white</item>
+        <item name="itemIconTint">@color/bottom_nav_selector</item>
+        <item name="itemTextColor">@color/bottom_nav_selector</item>
+        <item name="itemRippleColor">@color/primary_lightest</item>
+    </style>
+
+    <!-- Outlined Button Style -->
+    <style name="NodareOutlinedButtonStyle" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="strokeColor">@color/primary</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:textColor">@color/primary</item>
+    </style>
+
+    <!-- Filter Chip Style - Gradient Blue -->
+    <style name="NodareFilterChipStyle" parent="Widget.MaterialComponents.Chip.Filter">
+        <item name="chipBackgroundColor">@color/chip_gradient_bg</item>
+        <item name="android:textColor">@color/chip_gradient_text</item>
+        <item name="checkedIconTint">@color/chip_gradient_icon</item>
+        <item name="chipStrokeColor">@color/chip_gradient_stroke</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="chipCornerRadius">24dp</item>
+        <item name="rippleColor">@color/primary_lightest</item>
+    </style>
+
+    <!-- Text Input Style -->
+    <style name="NodareTextInputStyle" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/primary</item>
+        <item name="boxCornerRadiusTopStart">12dp</item>
+        <item name="boxCornerRadiusTopEnd">12dp</item>
+        <item name="boxCornerRadiusBottomStart">12dp</item>
+        <item name="boxCornerRadiusBottomEnd">12dp</item>
+        <item name="hintTextColor">@color/primary</item>
+        <item name="placeholderTextColor">@color/text_secondary</item>
+        <item name="expandedHintEnabled">false</item>
+    </style>
+
+    <!-- Text Input Style with floating label (for profile page) -->
+    <style name="NodareTextInputStyleFloating" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/primary</item>
+        <item name="boxCornerRadiusTopStart">12dp</item>
+        <item name="boxCornerRadiusTopEnd">12dp</item>
+        <item name="boxCornerRadiusBottomStart">12dp</item>
+        <item name="boxCornerRadiusBottomEnd">12dp</item>
+        <item name="hintTextColor">@color/primary</item>
+        <item name="placeholderTextColor">@color/text_secondary</item>
+        <item name="expandedHintEnabled">true</item>
+        <item name="hintEnabled">true</item>
+    </style>
+
+    <!-- Section Header Style -->
+    <style name="NodareSectionHeader">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/primary_dark</item>
+        <item name="android:fontFamily">@font/san_francisco</item>
+        <item name="fontFamily">@font/san_francisco</item>
+    </style>
+
+    <!-- Typography Theme Overrides to force sans-serif on all Material Components -->
+    <style name="TextAppearance.App.Body1" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="fontFamily">@font/san_francisco</item>
+        <item name="android:fontFamily">@font/san_francisco</item>
+    </style>
+    <style name="TextAppearance.App.Body2" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="fontFamily">@font/san_francisco</item>
+        <item name="android:fontFamily">@font/san_francisco</item>
+    </style>
+    <style name="TextAppearance.App.Headline1" parent="TextAppearance.MaterialComponents.Headline1">
+        <item name="fontFamily">@font/san_francisco</item>
+        <item name="android:fontFamily">@font/san_francisco</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.App.Headline2" parent="TextAppearance.MaterialComponents.Headline2">
+        <item name="fontFamily">@font/san_francisco</item>
+        <item name="android:fontFamily">@font/san_francisco</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.App.Headline3" parent="TextAppearance.MaterialComponents.Headline3">
+        <item name="fontFamily">@font/san_francisco</item>
+        <item name="android:fontFamily">@font/san_francisco</item>
+    </style>
+    <style name="TextAppearance.App.Headline4" parent="TextAppearance.MaterialComponents.Headline4">
+        <item name="fontFamily">@font/san_francisco</item>
+        <item name="android:fontFamily">@font/san_francisco</item>
+    </style>
+    <style name="TextAppearance.App.Headline5" parent="TextAppearance.MaterialComponents.Headline5">
+        <item name="fontFamily">@font/san_francisco</item>
+        <item name="android:fontFamily">@font/san_francisco</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.App.Headline6" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="fontFamily">@font/san_francisco</item>
+        <item name="android:fontFamily">@font/san_francisco</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.App.Subtitle1" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="fontFamily">@font/san_francisco</item>
+        <item name="android:fontFamily">@font/san_francisco</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.App.Subtitle2" parent="TextAppearance.MaterialComponents.Subtitle2">
+        <item name="fontFamily">@font/san_francisco</item>
+        <item name="android:fontFamily">@font/san_francisco</item>
+    </style>
+    <style name="TextAppearance.App.Button" parent="TextAppearance.MaterialComponents.Button">
+        <item name="fontFamily">@font/san_francisco</item>
+        <item name="android:fontFamily">@font/san_francisco</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+    <style name="TextAppearance.App.Caption" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="fontFamily">@font/san_francisco</item>
+        <item name="android:fontFamily">@font/san_francisco</item>
+    </style>
+    <style name="TextAppearance.App.Overline" parent="TextAppearance.MaterialComponents.Overline">
+        <item name="fontFamily">@font/san_francisco</item>
+        <item name="android:fontFamily">@font/san_francisco</item>
+    </style>
+
+</resources>

@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "fakegps": "fakegps-cff75",
+    "prod": "fakegps-cff75"
+  },
+  "targets": {},
+  "etags": {}
+}
