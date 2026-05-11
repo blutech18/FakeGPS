@@ -55,6 +55,10 @@ class DashboardFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // Show loading state initially while waiting for user data
+        binding.layoutLoading.visibility = View.VISIBLE
+        
         observeUser()
     }
 
@@ -62,6 +66,8 @@ class DashboardFragment : Fragment() {
         mainViewModel.currentUser.observe(viewLifecycleOwner) { state ->
             when (state) {
                 is Resource.Success -> {
+                    binding.layoutLoading.visibility = View.GONE
+                    binding.layoutContent.visibility = View.VISIBLE
                     val user = state.data
                     binding.tvWelcome.text = "Welcome, ${user.displayName}"
 
@@ -74,8 +80,8 @@ class DashboardFragment : Fragment() {
                     binding.cardEmployeeStatus.visibility = if (isAdmin) View.VISIBLE else View.GONE
 
                     // Non-admin: check-in/out buttons + status cards
-                    binding.layoutCheckInActions.visibility = if (!isAdmin) View.VISIBLE else View.GONE
                     binding.cardCheckInStatus.visibility = if (!isAdmin) View.VISIBLE else View.GONE
+                    binding.layoutCheckInActions.visibility = if (!isAdmin) View.VISIBLE else View.GONE
                     binding.cardDispatchStatus.visibility = if (!isAdmin) View.VISIBLE else View.GONE
 
                     // Info card for non-admin roles only
@@ -106,9 +112,12 @@ class DashboardFragment : Fragment() {
                     configureForRole(user.role)
                 }
                 is Resource.Error -> {
+                    binding.layoutLoading.visibility = View.GONE
+                    binding.layoutContent.visibility = View.VISIBLE
                     binding.tvWelcome.text = "Error loading profile"
                 }
                 is Resource.Loading -> {
+                    binding.layoutLoading.visibility = View.VISIBLE
                     binding.tvWelcome.text = "Loading..."
                 }
             }

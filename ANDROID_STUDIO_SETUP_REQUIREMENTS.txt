@@ -1,0 +1,164 @@
+NODARE GEOSEC (FAKEGPS) - ANDROID STUDIO SETUP REQUIREMENTS
+Document Type: Client Handoff Setup Guide
+Project: FakeGPS (Android app package: com.nodare.geosec)
+
+============================================================
+1) PURPOSE
+============================================================
+This document provides the exact requirements and step-by-step procedure to set up, build, and run the Nodare GeoSec Android application in Android Studio.
+
+============================================================
+2) REQUIRED SOFTWARE AND TOOLS
+============================================================
+2.1 Operating System
+- Windows 10/11, macOS, or Linux (64-bit)
+
+2.2 Android Development Stack
+- Android Studio Meerkat (2024.3.1) or newer
+- JDK 21 (required by Android Gradle Plugin 9.1.0)
+- Android SDK Platform 36
+- Android SDK Build-Tools (latest installed by Android Studio)
+- Android Emulator or physical Android device
+
+2.3 Build System Versions (already configured in project)
+- Gradle Wrapper: 9.3.1
+- Android Gradle Plugin (AGP): 9.1.0
+- Kotlin: 2.0.21
+- Minimum SDK: 26
+- Target/Compile SDK: 36
+
+2.4 Cloud/Backend Dependencies
+- Firebase project with:
+  - Authentication (Email/Password)
+  - Cloud Firestore
+  - Cloud Messaging (FCM)
+  - Cloud Functions
+  - Cloud Storage
+- Google Cloud API key with:
+  - Maps SDK for Android enabled
+  - Directions API enabled
+
+2.5 Optional but Required for Full Backend Setup
+- Node.js 18+ (Cloud Functions declares Node 18 engine)
+- Firebase CLI (for deploying Firestore rules/functions)
+
+============================================================
+3) REQUIRED PROJECT FILES AND SECRETS
+============================================================
+Before build/run, the following items MUST be provided locally:
+
+3.1 Firebase Android config file
+- File: app/google-services.json
+- Source: Firebase Console -> Project Settings -> Your apps -> Android app
+- Note: This file is not committed in repository and must be added manually.
+
+3.2 Google Maps API key in local.properties
+- File: local.properties (project root)
+- Add:
+  MAPS_API_KEY=YOUR_REAL_MAPS_API_KEY
+- Note: local.properties is local-only and should not be committed.
+
+3.3 (If seeding initial users) Service account key + .env
+- serviceAccountKey.json at project root
+- .env file at project root (copy from .env.example and set passwords):
+  CEO_PASSWORD=...
+  ADMIN_PASSWORD=...
+  TECH_PASSWORD=...
+  DRIVER_PASSWORD=...
+
+============================================================
+4) ANDROID STUDIO SETUP - STEP BY STEP
+============================================================
+Step 1 - Open the project
+1. Launch Android Studio.
+2. Select "Open" and choose the project root folder:
+   FakeGPS
+
+Step 2 - Configure SDK and JDK
+1. Open File -> Settings -> Build, Execution, Deployment -> Build Tools -> Gradle.
+2. Set Gradle JDK to JDK 21.
+3. Open SDK Manager and ensure Android SDK Platform 36 is installed.
+
+Step 3 - Add local configuration
+1. Place google-services.json in:
+   FakeGPS/app/google-services.json
+2. Open (or create) local.properties in project root.
+3. Add the Maps key:
+   MAPS_API_KEY=YOUR_REAL_MAPS_API_KEY
+
+Step 4 - Sync project
+1. Click "Sync Project with Gradle Files".
+2. Wait for dependency download and indexing to finish.
+3. Resolve any missing SDK prompts from Android Studio.
+
+Step 5 - Configure Firebase project (one-time backend setup)
+1. Ensure Firebase Authentication (Email/Password) is enabled.
+2. Ensure Firestore database is created.
+3. Ensure Cloud Messaging and Cloud Storage are enabled.
+4. If using rules from repository, deploy Firestore rules:
+   - Open terminal at project root
+   - Run:
+     cd firebase
+     firebase deploy --only firestore:rules
+
+Step 6 - Deploy Cloud Functions (if notifications/backend triggers are needed)
+1. In terminal:
+   cd firebase/functions
+   npm install
+   cd ..
+   firebase deploy --only functions
+
+Step 7 - (Optional) Seed initial users
+1. In project root, ensure serviceAccountKey.json exists.
+2. Copy .env.example to .env and set passwords.
+3. Run:
+   npm install
+   node create-initial-users.js
+
+Step 8 - Run the app
+1. Select app run configuration in Android Studio.
+2. Choose emulator/device (Google Play Services available).
+3. Click Run.
+
+Step 9 - Build verification from terminal (optional)
+1. From project root run:
+   gradlew.bat assembleDebug
+2. Confirm BUILD SUCCESSFUL.
+
+============================================================
+5) FIRST-RUN VALIDATION CHECKLIST
+============================================================
+- App installs and launches successfully.
+- Login screen appears.
+- Firebase authentication works for test users.
+- Map screen loads without API key error.
+- Device can request/grant location + notification permissions.
+- Firestore reads/writes are successful.
+- FCM token registration works for admin/CEO notification flow.
+
+============================================================
+6) COMMON ISSUES AND QUICK FIXES
+============================================================
+Issue: Build fails with Google Services plugin error
+Fix: Confirm app/google-services.json exists and matches package com.nodare.geosec.
+
+Issue: Maps show blank or API authorization error
+Fix: Confirm MAPS_API_KEY is set in local.properties and Maps/Directions APIs are enabled in Google Cloud.
+
+Issue: Gradle/JDK compatibility errors
+Fix: Use JDK 21 for Gradle and Android Studio project settings.
+
+Issue: Firebase functions deploy fails
+Fix: Use Node.js 18+ and verify Firebase CLI login/project selection.
+
+Issue: Permission-related GPS behavior
+Fix: Grant fine location, background location, and notification permissions on device.
+
+============================================================
+7) CLIENT DELIVERY NOTES
+============================================================
+- Do not commit secrets (local.properties, serviceAccountKey.json, .env).
+- Keep google-services.json environment-specific (dev/staging/prod as needed).
+- For production release, use a proper signing config and production Firebase project.
+
+End of document.

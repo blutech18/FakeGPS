@@ -7,9 +7,12 @@ import com.nodare.geosec.data.model.User
 import com.nodare.geosec.presentation.auth.LoginError
 import com.nodare.geosec.util.Constants
 import com.nodare.geosec.util.Resource
+import android.util.Log
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
+
+private const val TAG = "AuthRepository"
 
 @Singleton
 class AuthRepository @Inject constructor(
@@ -85,13 +88,25 @@ class AuthRepository @Inject constructor(
 
     suspend fun getCurrentUser(): Resource<User> {
         return try {
-            val uid = auth.currentUser?.uid ?: return Resource.Error("Not authenticated")
+            val uid = auth.currentUser?.uid
+            Log.d(TAG, "getCurrentUser() called, uid=$uid")
+            if (uid == null) {
+                Log.w(TAG, "getCurrentUser() - not authenticated, no current user")
+                return Resource.Error("Not authenticated")
+            }
+            Log.d(TAG, "getCurrentUser() - fetching Firestore doc for uid=$uid")
             val userDoc = firestore.collection(Constants.COLLECTION_USERS)
                 .document(uid).get().await()
+            Log.d(TAG, "getCurrentUser() - Firestore doc received, exists=${userDoc.exists()}")
             val user = userDoc.toObject(User::class.java)
-                ?: return Resource.Error("User profile not found")
+            if (user == null) {
+                Log.w(TAG, "getCurrentUser() - toObject returned null, doc data: ${userDoc.data}")
+                return Resource.Error("User profile not found")
+            }
+            Log.d(TAG, "getCurrentUser() - success, role=${user.role}, name=${user.displayName}")
             Resource.Success(user)
         } catch (e: Exception) {
+            Log.e(TAG, "getCurrentUser() - exception: ${e.javaClass.simpleName}: ${e.message}", e)
             Resource.Error(e.message ?: "Failed to get user", e)
         }
     }

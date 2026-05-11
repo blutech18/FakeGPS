@@ -1,5 +1,6 @@
 package com.nodare.geosec.presentation.dashboard
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -10,6 +11,7 @@ import com.nodare.geosec.util.Constants
 import com.nodare.geosec.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 
 @HiltViewModel
@@ -44,11 +46,24 @@ class MainViewModel @Inject constructor(
         get() = cachedUser != null
 
     fun loadCurrentUser() {
+        Log.d("MainViewModel", "loadCurrentUser() called")
         _currentUser.value = Resource.Loading
         viewModelScope.launch {
-            val result = authRepository.getCurrentUser()
+            Log.d("MainViewModel", "loadCurrentUser() - coroutine started, calling authRepository.getCurrentUser()")
+            val result = withTimeoutOrNull(15_000L) {
+                authRepository.getCurrentUser()
+            }
+            if (result == null) {
+                Log.e("MainViewModel", "loadCurrentUser() - timed out after 15s")
+                _currentUser.value = Resource.Error("Connection timed out. Please check your internet and try again.")
+                return@launch
+            }
+            Log.d("MainViewModel", "loadCurrentUser() - result: ${result.javaClass.simpleName}")
             if (result is Resource.Success) {
                 cachedUser = result.data
+                Log.d("MainViewModel", "loadCurrentUser() - cached user role=${result.data.role}")
+            } else if (result is Resource.Error) {
+                Log.e("MainViewModel", "loadCurrentUser() - error: ${result.message}")
             }
             _currentUser.value = result
         }

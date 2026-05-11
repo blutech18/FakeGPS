@@ -12,31 +12,63 @@
         android:orientation="vertical"
         android:gravity="top">
 
-        <!-- Header -->
+        <!-- Loading indicator shown while user data is being fetched -->
         <LinearLayout
+            android:id="@+id/layoutLoading"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:gravity="center"
+            android:padding="48dp"
+            android:visibility="visible">
+
+            <ProgressBar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:indeterminateTint="@color/primary" />
 
             <TextView
-                android:id="@+id/tvWelcome"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Welcome"
-                android:textColor="@color/primary_dark"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="16dp"
+                android:text="Loading dashboard..."
+                android:textSize="15sp"
+                android:textColor="@color/text_secondary" />
         </LinearLayout>
 
+        <!-- Main content container - hidden during loading -->
         <LinearLayout
+            android:id="@+id/layoutContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="80dp"
-            android:gravity="top|center_horizontal">
+            android:visibility="gone">
+
+            <!-- Header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <TextView
+                    android:id="@+id/tvWelcome"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Welcome"
+                    android:textColor="@color/primary_dark"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="80dp"
+                android:gravity="top|center_horizontal">
 
             <!-- Admin Panel Card - Header with gradient feel -->
             <com.google.android.material.card.MaterialCardView
@@ -1156,6 +1188,7 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+        </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

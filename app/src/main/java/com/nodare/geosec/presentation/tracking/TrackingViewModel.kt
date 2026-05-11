@@ -9,11 +9,14 @@ import com.nodare.geosec.data.model.GpsLog
 import com.nodare.geosec.data.repository.DispatchRepository
 import com.nodare.geosec.data.repository.GpsLogRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
  * Represents an employee's real-time tracking data for the admin map view.
+ * Includes bearing for directional arrow rotation (Waze/Grab-style).
  */
 data class EmployeeTrackingInfo(
     val userId: String,
@@ -23,6 +26,7 @@ data class EmployeeTrackingInfo(
     val longitude: Double,
     val accuracy: Float,
     val speed: Float,
+    val bearing: Float,
     val isSuspicious: Boolean,
     val lastUpdateTime: Long
 )
@@ -41,8 +45,16 @@ class TrackingViewModel @Inject constructor(
 
     private var isObserving = false
 
+    // Track per-session GPS observation jobs so we can cancel them when sessions change
+    private val sessionGpsJobs = mutableMapOf<String, Job>()
+
+    // Current active sessions and their latest GPS data, merged into the LiveData
+    private val activeSessions = mutableMapOf<String, DispatchSession>()
+    private val latestGpsPerSession = mutableMapOf<String, GpsLog>()
+
     /**
-     * Observe all active dispatch sessions, then fetch latest GPS log for each.
+     * Observe all active dispatch sessions in real-time.
+     * For each session, starts a real-time GPS listener so markers move live on the map.
      */
     fun observeActiveEmployees() {
         if (isObserving) return
@@ -50,40 +62,80 @@ class TrackingViewModel @Inject constructor(
 
         viewModelScope.launch {
             dispatchRepository.observeActiveSessions()
-                .collect { sessions ->
-                    loadLatestLocations(sessions)
+                .collectLatest { sessions ->
+                    handleSessionsUpdate(sessions)
                 }
         }
     }
 
     /**
-     * For each active session, get the latest GPS log to determine employee's current location.
-     * Always includes the employee even if no location data is available yet.
+     * When the list of active sessions changes:
+     * - Start GPS listeners for new sessions
+     * - Cancel GPS listeners for sessions that ended
+     * - Rebuild the employee locations list
      */
-    private suspend fun loadLatestLocations(sessions: List<DispatchSession>) {
+    private fun handleSessionsUpdate(sessions: List<DispatchSession>) {
         _isLoading.value = true
+
+        val currentSessionIds = sessions.map { it.id }.toSet()
+        val previousSessionIds = activeSessions.keys.toSet()
+
+        // Cancel GPS listeners for sessions that are no longer active
+        val removedSessions = previousSessionIds - currentSessionIds
+        for (sessionId in removedSessions) {
+            sessionGpsJobs[sessionId]?.cancel()
+            sessionGpsJobs.remove(sessionId)
+            activeSessions.remove(sessionId)
+            latestGpsPerSession.remove(sessionId)
+        }
+
+        // Update session data and start GPS listeners for new sessions
+        for (session in sessions) {
+            activeSessions[session.id] = session
+
+            if (session.id !in sessionGpsJobs) {
+                // Start real-time GPS observation for this session
+                val job = viewModelScope.launch {
+                    gpsLogRepository.observeLatestLogForSession(session.id)
+                        .collectLatest { gpsLog ->
+                            if (gpsLog != null) {
+                                latestGpsPerSession[session.id] = gpsLog
+                            }
+                            rebuildEmployeeLocations()
+                        }
+                }
+                sessionGpsJobs[session.id] = job
+            }
+        }
+
+        // Rebuild immediately for sessions that may not have GPS data yet
+        rebuildEmployeeLocations()
+    }
+
+    /**
+     * Merge active sessions with their latest GPS data into the UI model.
+     * Called whenever sessions change OR when any session's GPS data updates.
+     */
+    private fun rebuildEmployeeLocations() {
         val trackingInfoList = mutableListOf<EmployeeTrackingInfo>()
 
-        for (session in sessions) {
-            val latestLog = try {
-                gpsLogRepository.getLatestLogForSession(session.id)
-            } catch (e: Exception) {
-                null
-            }
+        for ((sessionId, session) in activeSessions) {
+            val gpsLog = latestGpsPerSession[sessionId]
 
             when {
-                latestLog != null -> {
+                gpsLog != null -> {
                     trackingInfoList.add(
                         EmployeeTrackingInfo(
                             userId = session.userId,
                             userName = session.userName,
-                            sessionId = session.id,
-                            latitude = latestLog.latitude,
-                            longitude = latestLog.longitude,
-                            accuracy = latestLog.accuracy,
-                            speed = latestLog.speed,
+                            sessionId = sessionId,
+                            latitude = gpsLog.latitude,
+                            longitude = gpsLog.longitude,
+                            accuracy = gpsLog.accuracy,
+                            speed = gpsLog.speed,
+                            bearing = gpsLog.bearing,
                             isSuspicious = session.isSuspicious,
-                            lastUpdateTime = latestLog.timestamp?.toDate()?.time ?: 0L
+                            lastUpdateTime = gpsLog.timestamp?.toDate()?.time ?: 0L
                         )
                     )
                 }
@@ -92,27 +144,28 @@ class TrackingViewModel @Inject constructor(
                         EmployeeTrackingInfo(
                             userId = session.userId,
                             userName = session.userName,
-                            sessionId = session.id,
+                            sessionId = sessionId,
                             latitude = session.startLocation.latitude,
                             longitude = session.startLocation.longitude,
                             accuracy = 0f,
                             speed = 0f,
+                            bearing = 0f,
                             isSuspicious = session.isSuspicious,
                             lastUpdateTime = session.startTime?.toDate()?.time ?: 0L
                         )
                     )
                 }
                 else -> {
-                    // No location data yet — still include employee with 0,0 so they appear in the list
                     trackingInfoList.add(
                         EmployeeTrackingInfo(
                             userId = session.userId,
                             userName = session.userName,
-                            sessionId = session.id,
+                            sessionId = sessionId,
                             latitude = 0.0,
                             longitude = 0.0,
                             accuracy = 0f,
                             speed = 0f,
+                            bearing = 0f,
                             isSuspicious = session.isSuspicious,
                             lastUpdateTime = session.startTime?.toDate()?.time ?: 0L
                         )
@@ -121,15 +174,26 @@ class TrackingViewModel @Inject constructor(
             }
         }
 
-        _employeeLocations.value = trackingInfoList
-        _isLoading.value = false
+        _employeeLocations.postValue(trackingInfoList)
+        _isLoading.postValue(false)
     }
 
     /**
-     * Force refresh all employee locations.
+     * Force refresh — cancels all GPS listeners and re-observes from scratch.
      */
     fun refresh() {
+        // Cancel all existing GPS observation jobs
+        sessionGpsJobs.values.forEach { it.cancel() }
+        sessionGpsJobs.clear()
+        activeSessions.clear()
+        latestGpsPerSession.clear()
         isObserving = false
         observeActiveEmployees()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        sessionGpsJobs.values.forEach { it.cancel() }
+        sessionGpsJobs.clear()
     }
 }

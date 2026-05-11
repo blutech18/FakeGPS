@@ -40,7 +40,10 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         if (viewModel.isLoggedIn) {
-            navigateToMain()
+            // Defer navigation to allow the activity lifecycle to complete
+            binding.root.post {
+                navigateToMain()
+            }
             return
         }
 

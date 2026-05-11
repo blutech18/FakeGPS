@@ -12,6 +12,7 @@ data class GpsLog(
     val longitude: Double = 0.0,
     val accuracy: Float = 0f,
     val speed: Float = 0f,
+    val bearing: Float = 0f,
     val timestamp: Timestamp? = null,
     @ServerTimestamp val createdAt: Timestamp? = null,
     @ServerTimestamp val updatedAt: Timestamp? = null

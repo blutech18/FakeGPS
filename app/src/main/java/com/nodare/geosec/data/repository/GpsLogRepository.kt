@@ -28,7 +28,8 @@ class GpsLogRepository @Inject constructor(
         latitude: Double,
         longitude: Double,
         accuracy: Float,
-        speed: Float
+        speed: Float,
+        bearing: Float = 0f
     ): Resource<Unit> {
         return try {
             val data = hashMapOf(
@@ -38,6 +39,7 @@ class GpsLogRepository @Inject constructor(
                 "longitude" to longitude,
                 "accuracy" to accuracy,
                 "speed" to speed,
+                "bearing" to bearing,
                 "timestamp" to Timestamp.now(),
                 "createdAt" to Timestamp.now(),
                 "updatedAt" to Timestamp.now()
@@ -55,7 +57,8 @@ class GpsLogRepository @Inject constructor(
         latitude: Double,
         longitude: Double,
         accuracy: Float,
-        speed: Float
+        speed: Float,
+        bearing: Float = 0f
     ) {
         val entity = PendingGpsLogEntity(
             userId = userId,
@@ -111,7 +114,9 @@ class GpsLogRepository @Inject constructor(
             .limit(200)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    android.util.Log.w("GpsLogRepository",
+                        "observeGpsLogs($userId) error: ${error.message}")
+                    trySend(emptyList())
                     return@addSnapshotListener
                 }
                 val logs = snapshot?.toObjects(GpsLog::class.java) ?: emptyList()
@@ -139,11 +144,40 @@ class GpsLogRepository @Inject constructor(
             .orderBy("timestamp", Query.Direction.ASCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    android.util.Log.w("GpsLogRepository",
+                        "observeSessionGpsLogs($sessionId) error: ${error.message}")
+                    trySend(emptyList())
                     return@addSnapshotListener
                 }
                 val logs = snapshot?.toObjects(GpsLog::class.java) ?: emptyList()
                 trySend(logs)
+            }
+        awaitClose { listener.remove() }
+    }
+
+    /**
+     * Real-time observation of the latest GPS log for a specific dispatch session.
+     * Emits the most recent GpsLog whenever new location data arrives.
+     * Used by the admin tracking map for live position updates.
+     *
+     * Errors (e.g. missing Firestore index) are logged and emitted as null
+     * instead of closing the flow, so the app doesn't crash.
+     */
+    fun observeLatestLogForSession(sessionId: String): Flow<GpsLog?> = callbackFlow {
+        val listener = collection
+            .whereEqualTo("dispatchSessionId", sessionId)
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .limit(1)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    // Log but don't crash — emit null so the marker stays at last known position
+                    android.util.Log.w("GpsLogRepository",
+                        "observeLatestLogForSession($sessionId) error: ${error.message}")
+                    trySend(null)
+                    return@addSnapshotListener
+                }
+                val log = snapshot?.toObjects(GpsLog::class.java)?.firstOrNull()
+                trySend(log)
             }
         awaitClose { listener.remove() }
     }

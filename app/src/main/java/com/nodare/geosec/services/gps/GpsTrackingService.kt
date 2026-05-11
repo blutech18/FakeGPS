@@ -220,7 +220,8 @@ class GpsTrackingService : Service() {
                     latitude = location.latitude,
                     longitude = location.longitude,
                     accuracy = location.accuracy,
-                    speed = location.speed
+                    speed = location.speed,
+                    bearing = location.bearing
                 )
                 // Also try syncing any pending offline logs
                 gpsLogRepository.syncPendingLogs()
@@ -232,7 +233,8 @@ class GpsTrackingService : Service() {
                     latitude = location.latitude,
                     longitude = location.longitude,
                     accuracy = location.accuracy,
-                    speed = location.speed
+                    speed = location.speed,
+                    bearing = location.bearing
                 )
             }
         }

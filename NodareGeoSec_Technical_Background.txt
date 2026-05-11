@@ -1,0 +1,234 @@
+NODARE GEOSEC — TECHNICAL BACKGROUND
+
+
+1. APP DEVELOPMENT PROCESS (STEP-BY-STEP)
+
+Step 1 — Planning & Design
+
+- Defined features: GPS tracking, fake GPS detection, dispatch management, role-based access
+- Designed Firestore data structure (collections: users, dispatch_sessions, gps_logs, security_alerts, routes, etc.)
+- Planned 4 user roles: CEO, Admin, Technician, Car Driver
+
+Step 2 — Firebase Project Setup
+
+- Created a Firebase project at console.firebase.google.com
+- Enabled: Authentication (Email/Password), Cloud Firestore, Cloud Messaging (FCM), Cloud Functions, Cloud Storage
+- Downloaded google-services.json and linked it to the Android project
+
+Step 3 — Android Project Setup (Android Studio)
+
+- Created a native Android project using Kotlin and Gradle (Kotlin DSL)
+- Configured minimum SDK Android 8.0 (API 26), target SDK Android 16 (API 36)
+- Set up dependency injection with Hilt/Dagger
+- Integrated Google Maps API key via local.properties (secure, not hardcoded)
+
+Step 4 — Feature Development
+
+- Built all UI screens (Login, Dashboard, Dispatch, Check-in, Equipment, Alerts, Tracking Map)
+- Implemented GPS Foreground Service (GpsTrackingService)
+- Built the 5-layer Fake GPS Detection engine (FakeGpsDetector)
+- Built route deviation detection (RouteDeviationDetector) using Google Directions API
+- Set up offline GPS logging with Room + WorkManager sync
+- Implemented role-based navigation and Firestore security rules
+
+Step 5 — Cloud Functions Development
+
+- Written in TypeScript, deployed to Firebase
+- Handles push notifications triggered by Firestore events (new alert, new dispatch, suspicious session)
+
+Step 6 — Initial User Seeding
+
+- A create-initial-users.js Node.js script seeds admin/CEO accounts into Firebase Auth + Firestore
+
+Step 7 — Build & Deploy
+
+- Built using ./gradlew assembleDebug / assembleRelease via Android Studio
+- Released with ProGuard/R8 code shrinking and obfuscation enabled
+- Firebase Cloud Functions deployed via Firebase CLI
+
+
+2. PROGRAMMING LANGUAGES USED
+
+Mobile App (Frontend + Logic)
+Language: Kotlin
+Purpose: Entire Android app — UI, business logic, services
+
+Cloud Functions (Backend)
+Language: TypeScript
+Purpose: Server-side push notification triggers
+
+User Seeding Script
+Language: JavaScript (Node.js)
+Purpose: One-time script to create initial users in Firebase
+
+Build Scripts
+Language: Kotlin DSL (Gradle)
+Purpose: Project build configuration
+
+
+Frontend
+
+The frontend is the Android app itself, built entirely in Kotlin using:
+
+- Material Design 3 — UI components and theming
+- ViewBinding — connecting XML layouts to Kotlin code
+- Jetpack Navigation — screen-to-screen navigation with SafeArgs
+- ViewModel + LiveData — reactive UI state management
+
+
+Backend
+
+There is no traditional server. The backend is Firebase (serverless):
+
+- Cloud Firestore — main database
+- Firebase Authentication — user login
+- Firebase Cloud Functions (TypeScript) — server-side event-driven logic
+- Firebase Cloud Messaging (FCM) — push notifications
+
+
+3. APPLICATIONS / PLATFORMS USED & THEIR FUNCTIONS
+
+Android Studio
+Primary IDE — used to write, build, and debug the entire Android app.
+
+Firebase Cloud Firestore
+Cloud NoSQL database — stores users, GPS logs, dispatch sessions, security alerts, routes, equipment, and check-in logs.
+
+Firebase Authentication
+Handles user login/logout using email and password.
+
+Firebase Cloud Messaging (FCM)
+Sends real-time push notifications to Admin/CEO devices when alerts or dispatches occur.
+
+Firebase Cloud Functions
+Serverless backend — auto-triggers notifications when Firestore documents are created or updated.
+
+Firebase Cloud Storage
+File/media storage (linked in dependencies).
+
+Google Maps SDK for Android
+Renders the live tracking map — shows employee positions with color-coded markers.
+
+Google Directions API
+Fetches expected routes as encoded polylines for route deviation detection.
+
+Google Play Services Location (FusedLocationProviderClient)
+Core GPS provider — requests high-accuracy location updates every 15 seconds.
+
+Room (SQLite)
+Local on-device database — stores GPS logs offline when there is no internet connection.
+
+WorkManager
+Background task scheduler — syncs offline Room GPS logs to Firestore every 15 minutes when internet is restored.
+
+Hilt / Dagger
+Dependency injection framework — manages how classes and services are connected.
+
+Retrofit + OkHttp
+HTTP networking library — used for calling the Google Directions API.
+
+Kotlin Coroutines
+Handles async/background operations (database writes, network calls) without freezing the UI.
+
+Gradle (Kotlin DSL)
+Build system — compiles and packages the Android app.
+
+Node.js + firebase-admin
+Used only for the one-time user seeding script (create-initial-users.js).
+
+Firebase CLI
+Used to deploy Firestore rules and Cloud Functions.
+
+
+4. HOW LOCATION TRACKING WORKS
+
+Overview
+
+Location tracking is powered by Google Play Services — FusedLocationProviderClient, which is Google's recommended location API. It intelligently combines GPS satellite, Wi-Fi, and cell tower signals to give the best possible accuracy.
+
+
+Step-by-Step Flow
+
+Step 1 — Dispatch Starts
+
+When a field employee (Technician/Driver) taps "Start Dispatch," the app:
+- Checks that background location and notification permissions are granted
+- Starts GpsTrackingService as a Foreground Service (persists even when the app is backgrounded)
+- A persistent notification ("Dispatch Active — GPS tracking is running...") appears on the device
+
+Step 2 — Location Updates
+
+FusedLocationProviderClient requests location updates with:
+- Priority: PRIORITY_HIGH_ACCURACY (uses GPS satellite primarily)
+- Update interval: every 15 seconds
+- Fastest interval: every 10 seconds
+- Max wait time: 20 seconds
+
+Step 3 — Each GPS Update is Processed
+
+On every location update, the service runs:
+- Fake GPS Detection — runs all 5 detection layers (see below)
+- Route Deviation Check — compares current position against the expected polyline using PolyUtil; triggers alert if more than 500 meters off-route
+- GPS Log Saved:
+    If online — saved directly to Firestore (gps_logs collection)
+    If offline — saved to Room (local SQLite) and synced later by WorkManager
+
+Step 4 — Tracking on Admin Map
+
+Admins have a live map view (Google Maps SDK) that shows all active employees:
+- Blue marker — normal
+- Red marker — suspicious (fake GPS detected)
+
+Step 5 — Dispatch Ends
+
+The employee must enter the encrypted dispatch key (generated at session start) to end the session — prevents unauthorized termination.
+
+
+5-Layer Fake GPS Detection Engine
+
+Each GPS update is analyzed by FakeGpsDetector running 5 checks in sequence:
+
+Layer 1 — Mock Provider
+Checks if the location is coming from a fake/mock provider.
+How: Uses location.isMock (Android 12+) or location.isFromMockProvider on older devices.
+
+Layer 2 — Developer Options
+Checks if mock location settings are turned on in Developer Options.
+How: Reads Settings.Secure.ALLOW_MOCK_LOCATION and Settings.Global.DEVELOPMENT_SETTINGS_ENABLED.
+
+Layer 3 — Spoofing Apps
+Checks if known GPS spoofing apps are installed on the device.
+How: Scans all installed app packages against a database of 20+ known spoofing app package names.
+
+Layer 4 — Movement Logic
+Checks if the movement is physically impossible (teleportation or impossible speed).
+How: Calculates speed between the last and current GPS point; flags if more than 200 km/h or if the device jumped more than 3km in less than 10 seconds.
+
+Layer 5 — Accuracy Anomaly
+Checks if the GPS accuracy is suspiciously perfect or abnormally bad.
+How: Tracks the last 10 accuracy readings. Real GPS fluctuates naturally — if the standard deviation is less than 0.01 (unnaturally consistent) or accuracy is worse than 100 meters, it flags it.
+
+If any critical layer triggers:
+- The dispatch session is automatically flagged as SUSPICIOUS in Firestore
+- An instant push notification is sent to all Admin and CEO devices via FCM
+
+
+5. TECHNICAL BACKGROUND — NODARE GEOSEC (SLIDE CONTENT)
+
+Front End
+Kotlin and XML layouts provide the app's UI structure, Material Design 3 handles styling and responsiveness, and ViewBinding connects UI components to logic on Android.
+
+Back End
+Firebase Cloud Functions (TypeScript) manage server-side logic, push notifications, and event-driven triggers for dispatches and security alerts.
+
+Database
+Cloud Firestore stores users, GPS logs, dispatch sessions, security alerts, routes, equipment, and check-in records. Room (SQLite) stores GPS data locally when offline.
+
+Location & Detection Layer
+Google Play Services (FusedLocationProviderClient) provides real-time GPS updates every 15 seconds. A 5-layer detection engine analyzes each update for fake GPS, spoofing apps, impossible movement, and accuracy anomalies.
+
+Architecture
+MVVM (Model-View-ViewModel) architecture with clean separation via Repository pattern and Hilt dependency injection. Offline-first design syncs local data to Firestore via WorkManager when connectivity is restored.
+
+Outcome
+A secure, real-time GPS dispatch management platform for field operations — with multi-layered fake GPS detection, route deviation monitoring, and role-based access for CEO, Admin, Technician, and Car Driver.
